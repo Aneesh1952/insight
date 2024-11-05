@@ -10,10 +10,6 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))  # Render sets PORT as an environment variable
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
-
 app = FastAPI()
 
 # Load the model and encoders
@@ -133,5 +129,9 @@ async def predict_subscription_status(input_data: PredictionInput):
     subscription_status = label_encoders['Subscription_Status'].inverse_transform(prediction)
 
     return JSONResponse(content={"predicted_subscription_status": subscription_status[0]})
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))  # Render sets PORT as an environment variable
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
 
 # To run the app, use: uvicorn filename:app --reload
