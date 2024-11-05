@@ -4,6 +4,7 @@ import pandas as pd
 import pickle
 import matplotlib.pyplot as plt
 import seaborn as sns
+from wordcloud import WordCloud
 import os
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -79,9 +80,19 @@ def generate_visualizations(data):
     visualizations.append("/visualizations/age_distribution.png")
     plt.close()
 
+    # Interest Tags Word Cloud
+    interest_text = " ".join(data['Interest_Tags'].dropna())
+    wordcloud = WordCloud(width=800, height=400, background_color="white").generate(interest_text)
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.savefig("visualizations/interest_tags_wordcloud.png")
+    visualizations.append("/visualizations/interest_tags_wordcloud.png")
+    plt.close()
+
     # Correlation Heatmap
     plt.figure(figsize=(12, 8))
-    correlation = data.corr()  # Ensure to compute correlation
+    correlation = data.corr()
     sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", square=True)
     plt.title("Correlation Heatmap")
     plt.savefig("visualizations/correlation_heatmap.png")
