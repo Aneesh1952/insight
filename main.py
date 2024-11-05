@@ -12,6 +12,10 @@ import uvicorn
 
 app = FastAPI()
 
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))  # Render provides this PORT variable
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
 # Load the model and encoders
 with open("user_preference_model2.pkl", "rb") as f:
     model_data = pickle.load(f)
@@ -130,8 +134,4 @@ async def predict_subscription_status(input_data: PredictionInput):
 
     return JSONResponse(content={"predicted_subscription_status": subscription_status[0]})
 
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))  # Render sets PORT as an environment variable
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
-
-# To run the app, use: uvicorn filename:app --reload
+# To run the app, use: uvicorn filename:app
