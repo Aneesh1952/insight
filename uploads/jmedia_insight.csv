@@ -1,0 +1,6 @@
+User_ID,Age,Gender,Region,Interest_Tags,Average_Session_Duration,Click_Through_Rate (CTR),Pages_Viewed,Last_Login,Subscription_Status
+1,28,Female,North America,"technology, finance, health",20,0.04,5,2024-10-25,Premium
+2,34,Male,Europe,"sports, travel, culture",15,0.03,4,2024-10-26,Free
+3,22,Other,Asia,"education, entertainment",15,0.05,6,2024-10-24,Premium
+4,41,Male,South America,"finance, health",20,0.06,7,2024-10-22,Free
+5,30,Female,Australia,"technology, lifestyle, fashion",25,0.07,5,2024-10-23,Premium
