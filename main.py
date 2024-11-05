@@ -97,11 +97,18 @@ def generate_visualizations(data):
 
     # Correlation Heatmap
     plt.figure(figsize=(12, 8))
-    correlation = data.corr()
-    sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", square=True)
-    plt.title("Correlation Heatmap")
-    plt.savefig("visualizations/correlation_heatmap.png")
-    visualizations.append("/visualizations/correlation_heatmap.png")
+    
+    # Select only numeric columns
+    numeric_data = data.select_dtypes(include=[float, int])  
+    
+    if not numeric_data.empty:  # Check if there are numeric columns
+        correlation = numeric_data.corr()  # Calculate correlation only on numeric data
+        sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", square=True)
+        plt.title("Correlation Heatmap")
+        plt.savefig("visualizations/correlation_heatmap.png")
+        visualizations.append("/visualizations/correlation_heatmap.png")
+    else:
+        print("No numeric data available for correlation.")
     plt.close()
 
     return visualizations
