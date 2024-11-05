@@ -79,10 +79,9 @@ def generate_visualizations(data):
     visualizations.append("/visualizations/age_distribution.png")
     plt.close()
 
-    # Correlation Heatmap (numeric data only)
+    # Correlation Heatmap
     plt.figure(figsize=(12, 8))
-    numeric_data = data.select_dtypes(include='number')  # Only select numeric columns
-    correlation = numeric_data.corr()
+    correlation = data.corr()  # Ensure to compute correlation
     sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", square=True)
     plt.title("Correlation Heatmap")
     plt.savefig("visualizations/correlation_heatmap.png")
