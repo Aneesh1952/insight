@@ -44,7 +44,7 @@ async def upload_file(file: UploadFile = File(...)):
         # Load dataset
         data = pd.read_csv(file_location)
     except Exception:
-        raise HTTPException(status_code=400, detail="The uploaded file is not a valid CSV.")
+        raise HTTPException(status_code=400, detail="The uploaded csv file does not contain required subscription_status, age, interest_tags columns")
 
     # Check for required columns
     missing_columns = REQUIRED_COLUMNS - set(data.columns)
@@ -53,13 +53,6 @@ async def upload_file(file: UploadFile = File(...)):
             status_code=400,
             detail=f"The uploaded file is missing required columns: {', '.join(missing_columns)}"
         )
-
-    # Ensure 'Age' is numeric
-    if not pd.api.types.is_numeric_dtype(data['Age']):
-        data['Age'] = pd.to_numeric(data['Age'], errors='coerce')
-
-    # Drop rows with NaN values in required columns
-    data = data.dropna(subset=REQUIRED_COLUMNS)
 
     # Generate visualizations
     visualizations = generate_visualizations(data)
@@ -125,27 +118,20 @@ def generate_visualizations(data):
 # Static file serving
 app.mount("/visualizations", StaticFiles(directory="visualizations"), name="visualizations")
 
-# Helper function to safely encode categorical inputs
-def safe_transform(encoder, value, default=0):
-    try:
-        return encoder.transform([value])[0]
-    except ValueError:
-        return default  # Use a default value for unseen categories
-
 # Prediction endpoint
 @app.post("/predict/")
 async def predict_subscription_status(input_data: PredictionInput):
-    # Encode categorical inputs with error handling
-    gender_encoded = safe_transform(label_encoders['Gender'], input_data.gender)
-    region_encoded = safe_transform(label_encoders['Region'], input_data.region)
-    interest_encoded = safe_transform(label_encoders['Interest_Tags'], input_data.interest_tags)
+    # Encode categorical inputs
+    gender_encoded = label_encoders['Gender'].transform([input_data.gender])[0]
+    region_encoded = label_encoders['Region'].transform([input_data.region])[0]
+    interest_encoded = label_encoders['Interest_Tags'].transform([input_data.interest_tags])[0]
 
     # Prepare feature vector for prediction
     user_features = [[
         input_data.age,
-        float(gender_encoded),
-        float(region_encoded),
-        float(interest_encoded),
+        gender_encoded,
+        region_encoded,
+        interest_encoded,
         input_data.avg_session_dur,
         input_data.ctr,
         input_data.pages_viewed
