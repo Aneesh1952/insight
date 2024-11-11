@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from pydantic import BaseModel
 import pandas as pd
 import pickle
@@ -8,13 +8,8 @@ from wordcloud import WordCloud
 import os
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-import uvicorn
 
 app = FastAPI()
-
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))  # Render provides this PORT variable
-    uvicorn.run(app, host="0.0.0.0", port=port)
 
 # Load the model and encoders
 with open("user_preference_model2.pkl", "rb") as f:
@@ -32,6 +27,9 @@ class PredictionInput(BaseModel):
     ctr: float
     pages_viewed: int
 
+# Define the required columns for the dataset
+REQUIRED_COLUMNS = {'Subscription_Status', 'Age', 'Interest_Tags'}
+
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
     # Ensure the uploads directory exists
@@ -42,8 +40,19 @@ async def upload_file(file: UploadFile = File(...)):
     with open(file_location, "wb") as f:
         f.write(await file.read())
 
-    # Load dataset
-    data = pd.read_csv(file_location)
+    try:
+        # Load dataset
+        data = pd.read_csv(file_location)
+    except Exception:
+        raise HTTPException(status_code=400, detail="The uploaded csv file does not contain required subscription_status, age, interest_tags columns")
+
+    # Check for required columns
+    missing_columns = REQUIRED_COLUMNS - set(data.columns)
+    if missing_columns:
+        raise HTTPException(
+            status_code=400,
+            detail=f"The uploaded file is missing required columns: {', '.join(missing_columns)}"
+        )
 
     # Generate visualizations
     visualizations = generate_visualizations(data)
@@ -97,18 +106,11 @@ def generate_visualizations(data):
 
     # Correlation Heatmap
     plt.figure(figsize=(12, 8))
-    
-    # Select only numeric columns
-    numeric_data = data.select_dtypes(include=[float, int])  
-    
-    if not numeric_data.empty:  # Check if there are numeric columns
-        correlation = numeric_data.corr()  # Calculate correlation only on numeric data
-        sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", square=True)
-        plt.title("Correlation Heatmap")
-        plt.savefig("visualizations/correlation_heatmap.png")
-        visualizations.append("/visualizations/correlation_heatmap.png")
-    else:
-        print("No numeric data available for correlation.")
+    correlation = data.corr()
+    sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", square=True)
+    plt.title("Correlation Heatmap")
+    plt.savefig("visualizations/correlation_heatmap.png")
+    visualizations.append("/visualizations/correlation_heatmap.png")
     plt.close()
 
     return visualizations
@@ -140,5 +142,3 @@ async def predict_subscription_status(input_data: PredictionInput):
     subscription_status = label_encoders['Subscription_Status'].inverse_transform(prediction)
 
     return JSONResponse(content={"predicted_subscription_status": subscription_status[0]})
-
-# To run the app, use: uvicorn filename:app
