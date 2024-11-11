@@ -106,12 +106,17 @@ def generate_visualizations(data):
 
     # Correlation Heatmap
     plt.figure(figsize=(12, 8))
-    correlation = data.corr()
-    sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", square=True)
-    plt.title("Correlation Heatmap")
-    plt.savefig("visualizations/correlation_heatmap.png")
-    visualizations.append("/visualizations/correlation_heatmap.png")
+    numeric_data = data.select_dtypes(include=['number'])  # Select only numeric columns
+    if numeric_data.shape[1] > 1:  # Ensure there are at least two numeric columns
+        correlation = numeric_data.corr()
+        sns.heatmap(correlation, annot=True, cmap="coolwarm", fmt=".2f", square=True)
+        plt.title("Correlation Heatmap")
+        plt.savefig("visualizations/correlation_heatmap.png")
+        visualizations.append("/visualizations/correlation_heatmap.png")
+    else:
+        print("Not enough numeric columns for correlation heatmap.")
     plt.close()
+
 
     return visualizations
 
