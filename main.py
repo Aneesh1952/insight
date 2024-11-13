@@ -1,4 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware  # Import the CORS middleware
 from pydantic import BaseModel
 import pandas as pd
 import pickle
@@ -10,6 +11,15 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this to restrict allowed origins if needed
+    allow_credentials=True,
+    allow_methods=["*"],  # Specify allowed methods, e.g., ["GET", "POST"]
+    allow_headers=["*"],  # Specify allowed headers, e.g., ["Content-Type"]
+)
 
 # Load the model and encoders
 with open("user_preference_model2.pkl", "rb") as f:
@@ -116,7 +126,6 @@ def generate_visualizations(data):
     else:
         print("Not enough numeric columns for correlation heatmap.")
     plt.close()
-
 
     return visualizations
 
